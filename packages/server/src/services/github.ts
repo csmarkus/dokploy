@@ -77,24 +77,22 @@ export const updateGithub = async (
 		.then((response) => response[0]);
 };
 
+type PreviewStatus = "success" | "error" | "running" | "initializing" | "closed";
+
+const STATUS_MESSAGES: Record<PreviewStatus, string> = {
+	success: "✅ Done",
+	error: "❌ Failed",
+	running: "🔄 Building",
+	initializing: "🔄 Building",
+	closed: "🔴 Closed",
+};
+
 export const getIssueComment = (
 	appName: string,
-	status: "success" | "error" | "running" | "initializing" | "closed",
+	status: PreviewStatus,
 	previewDomain: string,
 ) => {
-	let statusMessage = "";
-	if (status === "success") {
-		statusMessage = "✅ Done";
-	} else if (status === "error") {
-		statusMessage = "❌ Failed";
-	} else if (status === "initializing") {
-		statusMessage = "🔄 Building";
-	} else if (status === "closed") {
-		statusMessage = "🔴 Closed";
-	} else {
-		statusMessage = "🔄 Building";
-	}
-
+	const statusMessage = STATUS_MESSAGES[status];
 	const previewColumn =
 		status === "closed" ? "—" : `[Preview URL](${previewDomain})`;
 
