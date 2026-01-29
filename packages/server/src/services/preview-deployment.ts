@@ -16,7 +16,7 @@ import { manageDomain } from "../utils/traefik/domain";
 import { findApplicationById } from "./application";
 import { removeDeploymentsByPreviewDeploymentId } from "./deployment";
 import { createDomain } from "./domain";
-import { type Github, getIssueComment } from "./github";
+import { type Github, getIssueComment, updateIssueComment } from "./github";
 import { getWebServerSettings } from "./web-server-settings";
 
 export type PreviewDeployment = typeof previewDeployments.$inferSelect;
@@ -56,6 +56,32 @@ export const removePreviewDeployment = async (previewDeploymentId: string) => {
 		const application = await findApplicationById(
 			previewDeployment.applicationId,
 		);
+
+		// Update GitHub comment to show the preview is closed
+		if (
+			previewDeployment.pullRequestCommentId &&
+			application.githubId &&
+			application.owner &&
+			application.repository
+		) {
+			try {
+				const closedComment = getIssueComment(
+					application.name,
+					"closed",
+					"",
+				);
+				await updateIssueComment({
+					owner: application.owner,
+					repository: application.repository,
+					issue_number: previewDeployment.pullRequestNumber,
+					comment_id: Number.parseInt(previewDeployment.pullRequestCommentId),
+					githubId: application.githubId,
+					body: `### Dokploy Preview Deployment\n\n${closedComment}`,
+				});
+			} catch (error) {
+				console.error("Failed to update GitHub comment for closed preview:", error);
+			}
+		}
 
 		application.appName = previewDeployment.appName;
 		const cleanupOperations = [

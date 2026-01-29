@@ -79,7 +79,7 @@ export const updateGithub = async (
 
 export const getIssueComment = (
 	appName: string,
-	status: "success" | "error" | "running" | "initializing",
+	status: "success" | "error" | "running" | "initializing" | "closed",
 	previewDomain: string,
 ) => {
 	let statusMessage = "";
@@ -89,13 +89,19 @@ export const getIssueComment = (
 		statusMessage = "❌ Failed";
 	} else if (status === "initializing") {
 		statusMessage = "🔄 Building";
+	} else if (status === "closed") {
+		statusMessage = "🔴 Closed";
 	} else {
 		statusMessage = "🔄 Building";
 	}
+
+	const previewColumn =
+		status === "closed" ? "—" : `[Preview URL](${previewDomain})`;
+
 	const finished = `
 | Name       | Status       | Preview                             | Updated (UTC)         |
 |------------|--------------|-------------------------------------|-----------------------|
-| ${appName}  | ${statusMessage} | [Preview URL](${previewDomain}) | ${new Date().toISOString()} |
+| ${appName}  | ${statusMessage} | ${previewColumn} | ${new Date().toISOString()} |
 `;
 
 	return finished;
